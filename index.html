@@ -525,7 +525,9 @@ function renderNote(id){
     '<div class="tt"><h2>'+esc(t.name)+'</h2><div class="en">'+esc(t.en)+'</div></div></div></div>'+
     '<div class="row" style="flex:none">'+
     '<button class="btn sm '+(isRead?"":"pri")+'" id="nRead">'+(isRead?"✓ 已读":"标记已读")+'</button>'+
-    '<button class="btn sm" id="nDrill">去刷题'+mq.length+' / '+qs.length+'</button></div></div>';
+    (qs.length?'<button class="btn sm" id="nDrill">去刷题 '+mq.length+' / '+qs.length+'</button>'
+              :'<button class="btn sm" disabled title="练习册没有这个考点的题">无对应题</button>')+
+    '</div></div>';
 
   if(!qs.length) h+=blk("","📘","讲义补充","b-note","<div class='blk-note'>这个考点是官方大纲里有的，但你的练习册没有对应的题目。看懂笔记即可，考试会考。建议配合 AP Classroom 的真题练习。</div>","");
 
@@ -558,7 +560,7 @@ function renderNote(id){
   $("#nBody").querySelectorAll("[data-bh]").forEach(el=>el.onclick=()=>el.parentElement.classList.toggle("cl"));
   $("#nBody").querySelectorAll("[data-go]").forEach(el=>el.onclick=()=>openTopic(el.dataset.go));
   $("#nRead").onclick=()=>{if(read[id])delete read[id];else read[id]=1;sv();renderNote(id);renderSide();toast(read[id]?"已标记已读":"已取消")};
-  $("#nDrill").onclick=()=>{go("drill");setTimeout(()=>{$("#dU").value=t.unit;fillTopics();$("#dT").value=id;updCnt();startDrill()},60)};
+  const nD=$("#nDrill");if(!nD){}else nD.onclick=()=>{go("drill");setTimeout(()=>{$("#dU").value=t.unit;fillTopics();$("#dT").value=id;updCnt();startDrill()},60)};
 }
 
 /* ---------- 概览 ---------- */
