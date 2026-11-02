@@ -127,12 +127,16 @@ select:focus,input:focus{outline:none;border-color:var(--ac)}
 [data-theme="dark"] .warn{border-color:#3a2e18}
 
 /* ---------- 概览 ---------- */
-.hero{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;box-shadow:var(--sh);margin-bottom:16px;position:relative;overflow:hidden}
-.hero .h1{font-size:19px;font-weight:650;margin:0 0 4px;letter-spacing:-.3px}
+.hero{background:radial-gradient(1100px 320px at 88% -70%,var(--ac-soft),transparent 62%),var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;box-shadow:var(--sh);margin-bottom:16px;position:relative;overflow:hidden}
+.hero .h1{font-size:21px;font-weight:700;margin:0 0 5px;letter-spacing:-.4px}
 .hero .h2{color:var(--muted);font-size:13.5px}
-.stats{display:flex;gap:26px;margin-top:16px;flex-wrap:wrap}
-.stat b{display:block;font-size:24px;font-weight:650;letter-spacing:-.5px;line-height:1.2}
+.stats{display:flex;gap:0;margin-top:18px;flex-wrap:wrap}
+.stat{padding:0 26px;border-left:1px solid var(--line2)}
+.stat:first-child{padding-left:0;border-left:none}
+.stat b{display:block;font-size:26px;font-weight:700;letter-spacing:-.6px;line-height:1.2;font-variant-numeric:tabular-nums}
 .stat span{font-size:12px;color:var(--faint)}
+sub,sup{line-height:0;font-size:.76em}
+sub{vertical-align:-.32em}
 .uc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px;cursor:pointer;transition:.16s;box-shadow:var(--sh);position:relative;overflow:hidden}
 .uc:hover{border-color:var(--ac);transform:translateY(-2px);box-shadow:var(--sh-lg)}
 .uc .bar-t{height:3px;position:absolute;top:0;left:0;right:0}
@@ -172,7 +176,7 @@ select:focus,input:focus{outline:none;border-color:var(--ac)}
 .prose{font-size:14px;line-height:1.85;color:var(--text)}
 .prose p{margin:0 0 10px}
 .prose p:last-child{margin-bottom:0}
-.fml{font-family:var(--mono);font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--pu);border-radius:0 8px 8px 0;padding:7px 12px;margin-bottom:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;line-height:1.6}
+.fml{font-family:var(--mono);font-size:13px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--pu);border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;line-height:1.7}
 .fml:last-child{margin-bottom:0}
 .it{display:flex;gap:9px;padding:7px 0;font-size:13.5px;line-height:1.65;border-bottom:1px solid var(--line2)}
 .it:last-child{border-bottom:0}
@@ -392,6 +396,11 @@ const K_DONE="ap2v2_done", K_WRONG="ap2v2_wrong", K_READ="ap2v2_read", K_TH="ap2
 /* ---------- 工具 ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+/* 物理记号排版：X_yyy → 下标，10^-23 → 上标（在 esc 之后、仅匹配 _ 和 ^，不影响转义实体） */
+const fx=s=>String(s)
+  .replace(/([A-Za-z])_([A-Za-z0-9]{1,6})/g,(m,a,b)=>a+"<sub>"+b+"</sub>")
+  .replace(/\^\(([^()]{1,14})\)/g,(m,n)=>"<sup>"+n+"</sup>")
+  .replace(/\^(-?[0-9]+(?:\.[0-9]+)?)/g,(m,n)=>"<sup>"+n+"</sup>");
 const LS=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
 const SS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const done=LS(K_DONE,{}), wrong=LS(K_WRONG,{}), read=LS(K_READ,{});
@@ -531,22 +540,22 @@ function renderNote(id){
 
   if(!qs.length) h+=blk("","📘","讲义补充","b-note","<div class='blk-note'>这个考点是官方大纲里有的，但你的练习册没有对应的题目。看懂笔记即可，考试会考。建议配合 AP Classroom 的真题练习。</div>","");
 
-  h+=blk("core","💡","核心理解","b-core",'<div class="prose">'+n.core.split(/\n+/).filter(Boolean).map(p=>"<p>"+esc(p.trim())+"</p>").join("")+"</div>","");
+  h+=blk("core","💡","核心理解","b-core",'<div class="prose">'+n.core.split(/\n+/).filter(Boolean).map(p=>"<p>"+fx(esc(p.trim()))+"</p>").join("")+"</div>","");
 
   if(n.formula&&n.formula.length)
-    h+=blk("fml","∑","必记公式","b-fml",n.formula.map(f=>'<div class="fml">'+esc(f)+"</div>").join(""),n.formula.length+" 条");
+    h+=blk("fml","∑","必记公式","b-fml",n.formula.map(f=>'<div class="fml">'+fx(esc(f))+"</div>").join(""),n.formula.length+" 条");
 
   if(n.trap&&n.trap.length)
-    h+=blk("trap","⚠","易错陷阱","b-trap",n.trap.map((x,i)=>'<div class="it"><span class="n">'+(i+1)+'</span><span>'+esc(x)+"</span></div>").join(""),n.trap.length+" 条");
+    h+=blk("trap","⚠","易错陷阱","b-trap",n.trap.map((x,i)=>'<div class="it"><span class="n">'+(i+1)+'</span><span>'+fx(esc(x))+"</span></div>").join(""),n.trap.length+" 条");
 
   if(n.steps&&n.steps.length)
-    h+=blk("step","①","解题步骤","b-step",n.steps.map((x,i)=>'<div class="it"><span class="n">'+(i+1)+'</span><span>'+esc(x)+"</span></div>").join(""),n.steps.length+" 步");
+    h+=blk("step","①","解题步骤","b-step",n.steps.map((x,i)=>'<div class="it"><span class="n">'+(i+1)+'</span><span>'+fx(esc(x))+"</span></div>").join(""),n.steps.length+" 步");
 
   if(n.ask&&n.ask.length)
-    h+=blk("ask","？","考试怎么问","b-ask",n.ask.map((x,i)=>'<div class="it"><span class="n">'+(i+1)+'</span><span>'+esc(x)+"</span></div>").join(""),n.ask.length+" 种");
+    h+=blk("ask","？","考试怎么问","b-ask",n.ask.map((x,i)=>'<div class="it"><span class="n">'+(i+1)+'</span><span>'+fx(esc(x))+"</span></div>").join(""),n.ask.length+" 种");
 
   if(n.tip)
-    h+=blk("tip","✓","秒杀技巧","b-tip",'<div class="tip-b">'+esc(n.tip)+"</div>","");
+    h+=blk("tip","✓","秒杀技巧","b-tip",'<div class="tip-b">'+fx(esc(n.tip))+"</div>","");
 
   // 上下考点
   const i=TOPICS.findIndex(x=>x.id===id);
@@ -726,7 +735,7 @@ function renderFormula(){
       seg+='<div class="fg"><div class="fg-h"><span class="badge">'+esc(t.ced)+'</span>'+
         '<span style="font-size:13px;font-weight:600">'+esc(t.name)+'</span>'+
         '<span class="ct">'+fl.length+" 条</span></div>"+
-        fl.map(f=>'<div class="fml">'+esc(f)+"</div>").join("")+"</div>";
+        fl.map(f=>'<div class="fml">'+fx(esc(f))+"</div>").join("")+"</div>";
     }
     if(seg)h+='<div class="card" style="margin-bottom:12px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'+
       '<i style="width:9px;height:9px;border-radius:2px;background:'+UC[uu]+'"></i>'+
@@ -816,7 +825,7 @@ function doS(q0){
   r=r.slice(0,60);
   sel=0;$("#sCt").textContent=r.length+" 条结果";
   const h=r.map((x,i)=>'<div class="m-it'+(i===0?" sel":"")+'" data-x=\''+encodeURIComponent(JSON.stringify([x.ty,x.id]))+'\'>'+
-    '<span class="k">'+esc(x.k||"·")+'</span><span class="v">'+hl(x.v,kw)+'</span>'+
+    '<span class="k">'+esc(x.k||"·")+'</span><span class="v">'+fx(hl(x.v,kw))+'</span>'+
     '<span class="ty">'+(x.ty==="topic"?"考点":x.ty==="fml"?"公式":"题目")+"</span></div>").join("");
   $("#sBd").innerHTML=kw?(h||'<div class="empty">没有找到</div>'):
     '<div class="empty">输入关键词搜索考点、公式或题目<br><span style="font-size:11.5px">试试「康普顿」「球面镜」「半衰期」</span></div>';
