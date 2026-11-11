@@ -436,6 +436,7 @@ const OPTS = {"9C10":["the mass of its molecules","the average kinetic energy of
 const UC = {"9":"#f59e0b","10":"#3b82f6","11":"#10b981","12":"#8b5cf6","13":"#06b6d4","14":"#ec4899","15":"#ef4444"};
 const K_DONE="ap2v2_done", K_WRONG="ap2v2_wrong", K_READ="ap2v2_read", K_TH="ap2v2_theme", K_CUR="ap2v2_cur";
 const PROF_IDX="ap2v2_profs", PROF_CUR="ap2v2_prof";
+const SIGNUP_CODE="phy2-2026"; /* 开新账号的邀请码，只有知道代码的人能建号；想改就改这里 */
 
 /* ---------- 工具 ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -519,7 +520,8 @@ function buildProfModal(first){
   if(profs.length)
     h+=profs.map(p=>'<div class="p-row'+(p===prof?" cur":"")+'" data-pp="'+esc(p)+'"><span>👤 '+esc(p)+(p===prof?'<i class="p-me">当前</i>':'')+'</span><span class="p-del" data-pd="'+esc(p)+'">删除</span></div>').join("");
   else h+='<div class="empty" style="margin:0 0 12px">还没有账号，输个昵称开一个</div>';
-  h+='<div class="row" style="margin-top:12px"><input id="pNew" placeholder="昵称（如：小明）" style="flex:1" maxlength="16">'+
+  h+='<div class="row" style="margin-top:12px"><input id="pNew" placeholder="昵称（如：小明）" style="flex:1;min-width:0" maxlength="16">'+
+    '<input id="pCode" placeholder="邀请码" style="width:110px" maxlength="24">'+
     '<button class="btn pri sm" id="pCreate">创建 / 进入</button></div>'+
     (first?"":'<div class="row" style="margin-top:12px"><button class="btn sm" id="pExport">导出当前进度</button><span class="sp"></span><button class="btn sm" id="pClose">关闭</button></div>');
   ov.innerHTML=h;
@@ -540,6 +542,8 @@ function buildProfModal(first){
     const name=($("#pNew").value||"").trim();
     if(!name){toast("先输入昵称");return}
     if(profs.includes(name)){SS(PROF_CUR,name);location.reload();return}
+    const code=($("#pCode").value||"").trim();
+    if(code!==SIGNUP_CODE){toast("邀请码不对，问站长要");return}
     if(!profs.length){
       const ld=LS(K_DONE,null),lw=LS(K_WRONG,null),lr=LS(K_READ,null);
       if(ld||lw||lr){
