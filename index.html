@@ -137,6 +137,19 @@ select:focus,input:focus{outline:none;border-color:var(--ac)}
 .stat span{font-size:12px;color:var(--faint)}
 sub,sup{line-height:0;font-size:.76em}
 sub{vertical-align:-.32em}
+
+/* ---------- 半期复习 ---------- */
+.rv-t{border:1px solid var(--line2);border-radius:10px;margin-bottom:8px;overflow:hidden;transition:.15s}
+.rv-t:hover{border-color:var(--line)}
+.rv-h{display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;user-select:none}
+.rv-h:active{background:var(--surface)}
+.rv-h .nm{font-size:13.5px;font-weight:550;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rv-h .rv-a{color:var(--faint);font-size:10px;transition:transform .18s;flex:none}
+.rv-t.on .rv-h .rv-a{transform:rotate(-180deg)}
+.rv-b{display:none;padding:2px 13px 13px;border-top:1px solid var(--line2)}
+.rv-t.on .rv-b{display:block}
+.rv-core{font-size:13px;line-height:1.8;color:var(--muted);margin:10px 0}
+.rv-f .fml{margin-bottom:5px}
 .uc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px;cursor:pointer;transition:.16s;box-shadow:var(--sh);position:relative;overflow:hidden}
 .uc:hover{border-color:var(--ac);transform:translateY(-2px);box-shadow:var(--sh-lg)}
 .uc .bar-t{height:3px;position:absolute;top:0;left:0;right:0}
@@ -302,6 +315,7 @@ tr:last-child td{border-bottom:0}
     <div class="brand"><i class="dot"></i>AP Physics 2 <small>自学站</small></div>
     <nav class="tabs" id="tabs">
       <button class="tab on" data-v="home">概览</button>
+      <button class="tab" data-v="review">半期复习</button>
       <button class="tab" data-v="notes">笔记</button>
       <button class="tab" data-v="drill">刷题</button>
       <button class="tab" data-v="formula">公式</button>
@@ -334,6 +348,10 @@ tr:last-child td{border-bottom:0}
     </div>
     <div class="sec-t">七个单元<span class="ln"></span><span style="font-size:11.5px;color:var(--faint);font-weight:400">点击卡片进入该单元笔记</span></div>
     <div class="grid g4" id="hUnits"></div>
+  </section>
+
+  <section class="view" id="v-review">
+    <div id="rvBody"></div>
   </section>
 
   <section class="view" id="v-notes">
@@ -494,6 +512,7 @@ function go(v,tid){
   $("#side").classList.toggle("hide",v!=="notes");
   closeSide();
   if(v==="home")renderHome();
+  if(v==="review")renderReview();
   if(v==="notes"){renderSide();if(tid)openTopic(tid);else if(!curT){const t=LS(K_CUR,null);openTopic(t&&byId(t)?t:TOPICS[0].id)}else renderNote(curT)}
   if(v==="drill"){fillTopics();updCnt()}
   if(v==="formula")renderFormula();
@@ -635,6 +654,80 @@ function renderHome(){
       '<div class="uc-meta"><span><i>'+U.topics.length+"</i> 考点</span><span><i>"+dq+"</i>/"+uq.length+" 题</span></div></div>";
   }).join("");
   $("#hUnits").querySelectorAll("[data-u]").forEach(e=>e.onclick=()=>{go("notes");setTimeout(()=>openTopic(DATA[e.dataset.u].topics[0].id),60)});
+}
+
+/* ---------- 半期复习专栏（U9-U11） ---------- */
+const RV_UNITS=["9","10","11"];
+const RV_TOPICS=TOPICS.filter(t=>RV_UNITS.includes(t.unit));
+const RV_QS=QALL.filter(q=>RV_UNITS.includes(q.unit));
+function rvDrill(pool,n){
+  go("drill");
+  setTimeout(()=>{
+    const p=[...new Set(pool.map(q=>q.id))];
+    for(let i=p.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[p[i],p[j]]=[p[j],p[i]]}
+    sess=p.slice(0,Math.min(n,p.length));si=0;total=sess.length;st={};renderDrill();
+  },60);
+}
+function renderReview(){
+  const tps=RV_TOPICS.length,qn=RV_QS.length;
+  const rd=RV_TOPICS.filter(t=>read[t.id]).length;
+  const dn=RV_QS.filter(q=>done[q.id]).length;
+  const pct=qn?Math.round(dn/qn*100):0;
+  const un=RV_QS.filter(q=>!done[q.id]);
+  const must=RV_QS.filter(q=>MUSTSET.has(q.id));
+  let h='<div class="hero"><div class="h1">半期复习 · U9 热力学 / U10 电场与电势 / U11 电路</div>'+
+    '<div class="h2">期中考试范围。按考点过一遍 → 背公式 → 混合模拟测，都从这一页出发。</div>'+
+    '<div class="stats">'+
+    '<div class="stat"><b>'+tps+'</b><span>考点（已读 '+rd+'）</span></div>'+
+    '<div class="stat"><b>'+qn+'</b><span>题（已做 '+dn+'）</span></div>'+
+    '<div class="stat"><b>'+pct+'%</b><span>刷题完成率</span></div></div>'+
+    '<div class="row" style="margin-top:16px">'+
+    '<button class="btn pri" id="rvMock">🎯 混合模拟测 20 题</button>'+
+    '<button class="btn" id="rvMust">只刷必做题（'+must.length+'）</button>'+
+    '<button class="btn" id="rvNew" '+(un.length?'':'disabled')+'>只刷没做过的（'+un.length+'）</button>'+
+    '<span class="sp"></span><span style="font-size:12px;color:var(--faint)">建议顺序：过考点 → 每考点刷题 → 最后模拟测</span></div></div>';
+
+  for(const u of RV_UNITS){
+    const U=DATA[u],pu=upctU(u);
+    const uq=QALL.filter(q=>q.unit===u),dq=uq.filter(q=>done[q.id]).length;
+    h+='<div class="card" style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">'+
+      '<i style="width:10px;height:10px;border-radius:3px;background:'+UC[u]+'"></i>'+
+      '<b style="font-size:15.5px">U'+u+' '+esc(U.title)+'</b>'+
+      '<span style="font-size:11.5px;color:var(--faint)">'+esc(U.en)+' · 占比 '+U.w+'</span>'+
+      '<span class="sp"></span><span style="font-size:12px;color:var(--muted)">'+dq+'/'+uq.length+' 题</span></div>';
+    for(const t of U.topics){
+      const tq=(T2Q[t.id]||[]),td=tq.filter(x=>done[x]).length;
+      const mq=tq.filter(x=>MUSTSET.has(x)).length;
+      const core1=t.note.core.split(/\n+/)[0]||"";
+      h+='<div class="rv-t" data-rt="'+t.id+'"><div class="rv-h">'+
+        '<span class="ced" style="font-size:11px;padding:2px 7px">'+esc(t.ced)+'</span>'+
+        '<span class="nm">'+esc(t.name)+'</span>'+
+        (read[t.id]?'<i class="tag dup">已读</i>':'')+
+        '<span class="sp"></span>'+
+        '<span style="font-size:11.5px;color:var(--faint)">'+td+'/'+tq.length+' 题'+(mq?' · 必做'+mq:'')+'</span>'+
+        '<span class="rv-a">▾</span></div>'+
+        '<div class="rv-b"><p class="rv-core">'+fx(esc(core1))+'</p>'+
+        (t.note.formula&&t.note.formula.length?'<div class="rv-f">'+t.note.formula.map(f=>'<div class="fml">'+fx(esc(f))+'</div>').join("")+'</div>':'')+
+        (t.note.tip?'<div class="tip-b" style="margin-top:8px">'+fx(esc(t.note.tip))+'</div>':'')+
+        '<div class="row" style="margin-top:10px">'+
+        '<button class="btn sm pri" data-rn="'+t.id+'">看完整笔记</button>'+
+        (tq.length?'<button class="btn sm" data-rq="'+t.id+'">刷这考点（'+tq.length+'）</button>':'')+
+        '<button class="btn sm" data-rr="'+t.id+'">'+(read[t.id]?'取消已读':'标记已读')+'</button>'+
+        '</div></div></div>';
+    }
+    h+='</div>';
+  }
+  $("#rvBody").innerHTML=h;
+  $("#rvMock").onclick=()=>rvDrill(RV_QS,20);
+  $("#rvMust").onclick=()=>rvDrill(must,20);
+  $("#rvNew").onclick=()=>rvDrill(un,20);
+  $("#rvBody").querySelectorAll("[data-rt]").forEach(el=>{
+    el.querySelector(".rv-h").onclick=()=>el.classList.toggle("on");
+  });
+  const nav=(sel,fn)=>$("#rvBody").querySelectorAll("["+sel+"]").forEach(b=>b.onclick=e=>{e.stopPropagation();fn(b.getAttribute(sel))});
+  nav("data-rn",id=>go("notes",id));
+  nav("data-rr",id=>{if(read[id])delete read[id];else read[id]=1;sv();renderReview();renderSide();toast(read[id]?"已标记已读":"已取消")});
+  nav("data-rq",id=>{const t=byId(id);go("drill");setTimeout(()=>{$("#dU").value=t.unit;fillTopics();$("#dT").value=id;updCnt();startDrill()},60)});
 }
 
 /* ---------- 刷题 ---------- */
